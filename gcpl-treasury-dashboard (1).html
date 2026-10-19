@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GCPL Treasury Transformation Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{--bg:#f2f5f4;--surf:#fff;--ink:#14262b;--mut:#5b6d72;--line:#d5dedc;--acc:#0f6b66;--good:#1d8a55;--warn:#b9770e;--bad:#b83a3a;--track:#e3eae8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a1d;--surf:#162529;--ink:#e6eeed;--mut:#93a8ab;--line:#28393d;--acc:#4fc3b9;--good:#4cc98a;--warn:#e3a53f;--bad:#ef7676;--track:#22343a}}
+:root[data-theme="dark"]{--bg:#0e1a1d;--surf:#162529;--ink:#e6eeed;--mut:#93a8ab;--line:#28393d;--acc:#4fc3b9;--good:#4cc98a;--warn:#e3a53f;--bad:#ef7676;--track:#22343a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+h1,h2{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;margin:0}
+h1{font-size:26px}h2{font-size:19px;margin:32px 0 12px}
+.top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end}
+.sub{color:var(--mut);margin:4px 0 0;max-width:60ch}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:6px;padding:6px 12px}
+button:hover{border-color:var(--acc)}button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.on{background:var(--acc);border-color:var(--acc);color:var(--surf)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.hero{display:grid;grid-template-columns:240px 1fr;gap:16px;margin-top:20px}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:16px}
+.ring{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring svg{width:150px;height:150px}.ring .n{font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{border-left:3px solid var(--line);padding-left:10px}.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.stat span{color:var(--mut);font-size:13px}
+.cat{display:grid;grid-template-columns:130px 1fr 44px;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+.bar{height:8px;background:var(--track);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:4px;transition:width .3s}
+.pct{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.kpi{display:flex;flex-direction:column;gap:8px}
+.kpi h3{margin:0;font-size:16px}.kpi .m{color:var(--mut);font-size:13px;margin:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid currentColor;white-space:nowrap}
+.s-ok{color:var(--good)}.s-mid{color:var(--warn)}.s-low{color:var(--bad)}.s-na{color:var(--mut)}
+.ins{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{font-size:12px;color:var(--mut);display:block}
+input{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-variant-numeric:tabular-nums}
+.tgt{font-size:13px}.tgt b{color:var(--acc)}
+.ben{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ben .panel h3{margin:0 0 4px;font-size:15px}.ben p{margin:0 0 10px;font-size:13.5px;color:var(--mut)}
+.ben small{display:block;margin-top:6px;color:var(--mut);font-size:12px}
+.note{margin-top:28px;font-size:13px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.cat{grid-template-columns:100px 1fr 40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+ <div><h1>GCPL treasury transformation dashboard</h1>
+ <p class="sub">Enter a current value for each KPI. Progress, status and benefit tracking update instantly and are saved in this browser.</p></div>
+ <div class="actions"><button id="sample">Load sample data</button><button id="reset">Clear all values</button><button id="export">Copy summary</button></div>
+</div>
+
+<div class="hero">
+ <div class="panel ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--track)" stroke-width="10"/><circle id="arc" cx="60" cy="60" r="52" fill="none" stroke="var(--acc)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .4s"/></svg>
+ <div class="n" id="overall">–</div><span style="color:var(--mut);font-size:13px">overall progress to target</span></div>
+ <div class="panel">
+  <div class="stats">
+   <div class="stat"><b id="c-ok">0</b><span>Achieved</span></div>
+   <div class="stat"><b id="c-mid">0</b><span>On track</span></div>
+   <div class="stat"><b id="c-low">0</b><span>At risk</span></div>
+   <div class="stat"><b id="c-na">0</b><span>No data yet</span></div>
+  </div>
+  <div id="cats"></div>
+ </div>
+</div>
+
+<h2>Treasury KPI scorecard</h2>
+<div class="chips" id="chips" role="group" aria-label="Filter KPIs"></div>
+<div class="grid" id="kpis"></div>
+
+<h2>Benefits to be achieved</h2>
+<div class="ben" id="bens"></div>
+
+<p class="note">These are proposed transformation targets for GCPL, not verified current performance figures. Final targets should be validated after establishing baseline data, country-level regulatory requirements and system capabilities. Status: achieved at 100%, on track from 70%, at risk below 70%.</p>
+</div>
+
+<script>
+// dir: gte = higher is better; lte = lower is better. start = baseline used to measure progress for lte KPIs.
+var K=[
+{id:'partners',cat:'Cost',name:'Banking partner rationalization',m:'Number of active banking partners',dir:'lte',t:20,start:25,u:'partners',tl:'20 or fewer',s:22},
+{id:'accounts',cat:'Cost',name:'Bank account rationalization',m:'Reduction in redundant accounts',dir:'gte',t:1,u:'% reduced',tl:'Set baseline; reduce non-essential accounts (any reduction counts)',s:12},
+{id:'bcost',cat:'Cost',name:'Banking cost',m:'Bank fees and FX spreads, reduction from baseline',dir:'gte',t:10,u:'% reduction',tl:'10–15% below baseline',s:8},
+{id:'borrow',cat:'Liquidity',name:'Borrowing cost',m:'Average effective interest cost, reduction vs comparable baseline',dir:'gte',t:1,u:'% reduction',tl:'Reduce against comparable baseline (any reduction counts)',s:0.6},
+{id:'idle',cat:'Liquidity',name:'Idle cash',m:'Unutilized cash as % of total available cash, quarter-on-quarter reduction',dir:'gte',t:1,u:'% reduction QoQ',tl:'Reduce quarter-on-quarter',s:4},
+{id:'vis',cat:'Visibility',name:'Cash visibility',m:'Share of global cash balances visible through TMS',dir:'gte',t:95,u:'%',tl:'95%+',s:88},
+{id:'fcst',cat:'Visibility',name:'Cash forecast accuracy',m:'Forecast versus actual cash flows',dir:'gte',t:90,u:'%',tl:'90%+',s:84},
+{id:'auto',cat:'Efficiency',name:'Automation rate',m:'Share of eligible treasury processes automated',dir:'gte',t:80,u:'%',tl:'80%+',s:62},
+{id:'pay',cat:'Efficiency',name:'Payment efficiency',m:'Payments processed accurately and on time',dir:'gte',t:98,u:'%',tl:'98%+',s:97.2},
+{id:'rec',cat:'Efficiency',name:'Reconciliation efficiency',m:'Bank transactions reconciled automatically',dir:'gte',t:90,u:'%',tl:'90%+',s:71},
+{id:'fx',cat:'Risk and control',name:'FX risk',m:'Unhedged exposure as % of approved limit',dir:'lte',t:100,u:'% of limit',tl:'Within approved limits (100% or less)',s:92},
+{id:'ctrl',cat:'Risk and control',name:'Control compliance',m:'Material policy breaches and unauthorized payments',dir:'lte',t:0,u:'breaches',tl:'Zero material breaches',s:1}
+];
+var B=[
+['Lower banking costs','Fewer partners and accounts, better group-wide fees and FX spreads.',['partners','accounts','bcost']],
+['Optimized liquidity','Cash pooling and intercompany funding cut idle cash and external borrowing.',['idle','borrow']],
+['Improved cash visibility','Banks and ERPs integrated into a central TMS for one global cash position.',['vis']],
+['Reduced financial risk','Central FX monitoring, hedging policy and counterparty limits.',['fx']],
+['Greater operational efficiency','Automated reconciliations, payments, forecasting and reporting.',['auto','pay','rec']],
+['Stronger governance','Standard approvals, segregation of duties and fraud prevention.',['ctrl']],
+['Better financial decisions','Real-time dashboards improve funding, investment and working-capital calls.',['fcst','vis']],
+['Scalable global operations','Central treasury with local execution supports future expansion.',['auto','vis','partners']]
+];
+var KEY='gcpl-treasury-v1',vals={},filter='All';
+try{vals=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){vals={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(vals))}catch(e){}}
+function num(v){return v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v)}
+function prog(k){
+ var c=num(vals[k.id]);if(c===null)return null;
+ if(k.dir==='gte')return Math.max(0,Math.min(100,c/k.t*100));
+ if(c<=k.t)return 100;
+ if(k.start!==undefined&&k.start>k.t){var b=num(vals[k.id+'_b']);var st=b!==null?b:k.start;return Math.max(0,Math.min(99,(st-c)/(st-k.t)*100))}
+ return 0;
+}
+function st(p){return p===null?['na','No data']:p>=100?['ok','Achieved']:p>=70?['mid','On track']:['low','At risk']}
+function fmt(n){return Math.round(n*10)/10}
+function render(){
+ var cats=['All'].concat(K.map(function(k){return k.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
+ var ch=document.getElementById('chips');ch.innerHTML='';
+ cats.forEach(function(c){var b=document.createElement('button');b.textContent=c;if(c===filter)b.className='on';b.setAttribute('aria-pressed',c===filter);b.onclick=function(){filter=c;render()};ch.appendChild(b)});
+ var g=document.getElementById('kpis');g.innerHTML='';
+ K.filter(function(k){return filter==='All'||k.cat===filter}).forEach(function(k){
+  var p=prog(k),s=st(p),d=document.createElement('div');d.className='panel kpi';
+  var base=(k.dir==='lte'&&k.start!==undefined)?'<div><label for="b-'+k.id+'">Baseline</label><input id="b-'+k.id+'" type="number" step="any" placeholder="'+k.start+'" value="'+(vals[k.id+'_b']===undefined?'':vals[k.id+'_b'])+'"></div>':'';
+  d.innerHTML='<div class="row"><h3>'+k.name+'</h3><span class="badge s-'+s[0]+'">'+s[1]+'</span></div><p class="m">'+k.cat+': '+k.m+'</p>'+
+  '<div class="tgt">Target: <b>'+k.tl+'</b></div>'+
+  '<div class="ins"><div><label for="i-'+k.id+'">Current ('+k.u+')</label><input id="i-'+k.id+'" type="number" step="any" value="'+(vals[k.id]===undefined?'':vals[k.id])+'"></div>'+base+'</div>'+
+  '<div class="row"><div class="bar" style="flex:1" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+(p===null?0:Math.round(p))+'"><i style="width:'+(p===null?0:p)+'%;background:var(--'+(s[0]==='ok'?'good':s[0]==='mid'?'warn':s[0]==='low'?'bad':'track')+')"></i></div><span class="pct">'+(p===null?'–':Math.round(p)+'%')+'</span></div>';
+  g.appendChild(d);
+  d.querySelector('#i-'+k.id).onchange=function(e){vals[k.id]=e.target.value;save();render()};
+  var bi=d.querySelector('#b-'+k.id);if(bi)bi.onchange=function(e){vals[k.id+'_b']=e.target.value;save();render()};
+ });
+ var all=K.map(prog),have=all.filter(function(p){return p!==null}),cnt={ok:0,mid:0,low:0,na:0};
+ all.forEach(function(p){cnt[st(p)[0]]++});
+ for(var x in cnt)document.getElementById('c-'+x).textContent=cnt[x];
+ var ov=have.length?have.reduce(function(a,b){return a+b},0)/have.length:null;
+ document.getElementById('overall').textContent=ov===null?'–':Math.round(ov)+'%';
+ document.getElementById('arc').style.strokeDashoffset=326.7*(1-(ov||0)/100);
+ var cd=document.getElementById('cats');cd.innerHTML='';
+ cats.slice(1).forEach(function(c){
+  var ps=K.filter(function(k){return k.cat===c}).map(prog).filter(function(p){return p!==null});
+  var a=ps.length?ps.reduce(function(x,y){return x+y},0)/ps.length:null;
+  var r=document.createElement('div');r.className='cat';r.innerHTML='<span>'+c+'</span><div class="bar"><i style="width:'+(a||0)+'%"></i></div><span class="pct">'+(a===null?'–':Math.round(a)+'%')+'</span>';cd.appendChild(r)});
+ var bd=document.getElementById('bens');bd.innerHTML='';
+ B.forEach(function(b){
+  var ks=b[2].map(function(id){return K.filter(function(k){return k.id===id})[0]}),ps=ks.map(prog).filter(function(p){return p!==null});
+  var a=ps.length?ps.reduce(function(x,y){return x+y},0)/ps.length:null;
+  var d=document.createElement('div');d.className='panel';
+  d.innerHTML='<h3>'+b[0]+'</h3><p>'+b[1]+'</p><div class="row"><div class="bar" style="flex:1"><i style="width:'+(a||0)+'%"></i></div><span class="pct">'+(a===null?'–':Math.round(a)+'%')+'</span></div><small>Tracked by: '+ks.map(function(k){return k.name}).join(', ')+'</small>';
+  bd.appendChild(d)});
+}
+document.getElementById('sample').onclick=function(){K.forEach(function(k){vals[k.id]=k.s});vals.partners_b='';save();render()};
+document.getElementById('reset').onclick=function(){vals={};save();render()};
+document.getElementById('export').onclick=function(){
+ var t='GCPL Treasury Scorecard\n'+K.map(function(k){var p=prog(k);return k.name+': '+(num(vals[k.id])===null?'no data':vals[k.id]+' '+k.u)+' (target '+k.tl+') - '+st(p)[1]+(p===null?'':' '+Math.round(p)+'%')}).join('\n');
+ var b=document.getElementById('export');
+ function done(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy summary'},1500)}
+ try{navigator.clipboard.writeText(t).then(done,function(){prompt('Copy this summary:',t)})}catch(e){prompt('Copy this summary:',t)}
+};
+render();
+</script>
+</body>
+</html>
